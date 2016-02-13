@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 shouldRecord = false;
-                String locationName = (String) locationNameView.getText();
+                String locationName = locationNameView.getText().toString().trim();
                 locationNameView.setText("");
                 collectLocationSignals(locationName);
             }
@@ -86,12 +86,12 @@ public class MainActivity extends AppCompatActivity {
         signalServer.collectLocationSignals(new TypedJsonString("{\"locationName\": \"" + locationName + "\"}"), new Callback<Response>() {
             @Override
             public void success(Response response, Response response2) {
-                System.out.println("Success: " + response);
+                System.out.println("Collect Success: " + response);
             }
 
             @Override
             public void failure(RetrofitError error) {
-                System.out.println("Error: " + error);
+                System.out.println("Collect Error: " + error);
             }
         });
     }
@@ -149,12 +149,12 @@ public class MainActivity extends AppCompatActivity {
         signalServer.dumpSignals(signalJson, new Callback<Response>() {
             @Override
             public void success(Response response, Response response2) {
-                System.out.println("Success: " + response);
+                System.out.println("Dump Success: " + response);
             }
 
             @Override
             public void failure(RetrofitError error) {
-                System.out.println(error);
+                System.out.println("Dump Error: " + error);
             }
         });
     }
