@@ -118,17 +118,15 @@ public class MainActivity extends AppCompatActivity {
         String locationName = locationNameView.getText().toString().trim();
         WifiManager wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
         List<ScanResult> aps = wifiManager.getScanResults();
-        for (ScanResult ap : aps) {
-            dumpIntoMongo(locationName, ap);
-        }
+        dumpIntoMongo(locationName, aps);
         H.sendEmptyMessageDelayed(MSG_FETCH_WIFI_STRENGTH, REFRESH_DURATION);
     }
 
-    private void dumpIntoMongo(String locationName, ScanResult ap) {
+    private void dumpIntoMongo(String locationName, List<ScanResult> aps) {
         System.out.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&in dumpintomongo");
-        System.out.println("ScanREsult: " + ap);
+        System.out.println("ScanREsult: " + aps);
 
-        SpecificSignals specificSignals = new SpecificSignals(locationName, ap);
+        SpecificSignals specificSignals = new SpecificSignals(locationName, aps);
         TypedJsonString signalJson = new TypedJsonString(new Gson().toJson(specificSignals));
         System.out.println("signaljson: " + signalJson);
 
