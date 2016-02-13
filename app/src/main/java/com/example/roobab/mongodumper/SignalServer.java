@@ -14,4 +14,6 @@ public interface SignalServer {
     @POST("/api/signals")
     public void dumpSignals(@Body TypedJsonString signalJson, Callback<Response> cb);
 
+    @POST("/api/collectSignals")
+    public void collectLocationSignals(@Body TypedJsonString locationName, Callback<Response> cb);
 }

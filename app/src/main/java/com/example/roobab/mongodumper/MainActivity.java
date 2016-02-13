@@ -75,7 +75,23 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 shouldRecord = false;
+                String locationName = (String) locationNameView.getText();
                 locationNameView.setText("");
+                collectLocationSignals(locationName);
+            }
+        });
+    }
+
+    private void collectLocationSignals(String locationName) {
+        signalServer.collectLocationSignals(new TypedJsonString("{\"locationName\": \"" + locationName + "\"}"), new Callback<Response>() {
+            @Override
+            public void success(Response response, Response response2) {
+                System.out.println("Success: " + response);
+            }
+
+            @Override
+            public void failure(RetrofitError error) {
+                System.out.println("Error: " + error);
             }
         });
     }
