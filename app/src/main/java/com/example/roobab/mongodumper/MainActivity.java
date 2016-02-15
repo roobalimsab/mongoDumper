@@ -67,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
         startRecordingView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                H.sendEmptyMessage(MSG_FETCH_WIFI_STRENGTH);
                 shouldRecord = true;
             }
         });
@@ -161,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
 
     private SignalServer getSignalServer() {
         RestAdapter restAdapter = new RestAdapter.Builder()
-                .setEndpoint("http://192.168.0.30:9090")
+                .setEndpoint("http://10.132.124.51:9090")
                 .build();
         return restAdapter.create(SignalServer.class);
     }
