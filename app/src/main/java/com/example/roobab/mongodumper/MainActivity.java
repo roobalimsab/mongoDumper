@@ -4,6 +4,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Handler;
@@ -26,7 +30,7 @@ import static android.net.ConnectivityManager.CONNECTIVITY_ACTION;
 import static android.net.wifi.WifiManager.RSSI_CHANGED_ACTION;
 import static android.net.wifi.WifiManager.SCAN_RESULTS_AVAILABLE_ACTION;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SensorEventListener {
     private static final int MSG_FETCH_WIFI_STRENGTH = 1;
     private static final long REFRESH_DURATION = 100;
     private TextView startRecordingView;
@@ -45,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+    private SensorManager sensorManager;
+    private Sensor magneticFieldSensor;
 
     private void startScan() {
         WifiManager wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
@@ -56,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         signalServer = getSignalServer();
+        setupSensorReceivers();
 
         setUpViews();
         H.sendEmptyMessage(MSG_FETCH_WIFI_STRENGTH);
@@ -100,14 +107,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
+        sensorManager.registerListener(this, magneticFieldSensor, SensorManager.SENSOR_DELAY_NORMAL);
         setupWifiSignalReceivers();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-
+        sensorManager.unregisterListener(this);
         unregisterReceivers();
     }
 
@@ -120,6 +127,11 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+
+    private void setupSensorReceivers() {
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        magneticFieldSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
+    }
 
     private void setupWifiSignalReceivers() {
         registerReceiver(wifiReceiver, new IntentFilter(CONNECTIVITY_ACTION));
@@ -162,8 +174,18 @@ public class MainActivity extends AppCompatActivity {
 
     private SignalServer getSignalServer() {
         RestAdapter restAdapter = new RestAdapter.Builder()
-                .setEndpoint("http://10.132.124.51:9090")
+                .setEndpoint("http://192.168.0.34:9090")
                 .build();
         return restAdapter.create(SignalServer.class);
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@event: " + event);
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
     }
 }
