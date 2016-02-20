@@ -15,6 +15,7 @@ import android.widget.TextView;
 
 import com.google.gson.Gson;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import retrofit.Callback;
@@ -135,7 +136,13 @@ public class MainActivity extends AppCompatActivity {
         String locationName = locationNameView.getText().toString().trim();
         WifiManager wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
         List<ScanResult> aps = wifiManager.getScanResults();
-        dumpIntoMongo(locationName, aps);
+        List<ScanResult> filteredAps = new ArrayList<>();
+        for(ScanResult ap : aps) {
+            if(ap.SSID.equals("twguest")) {
+                filteredAps.add(ap);
+            }
+        }
+        dumpIntoMongo(locationName, filteredAps);
         H.sendEmptyMessageDelayed(MSG_FETCH_WIFI_STRENGTH, REFRESH_DURATION);
     }
 
@@ -162,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
 
     private SignalServer getSignalServer() {
         RestAdapter restAdapter = new RestAdapter.Builder()
-                .setEndpoint("http://10.132.124.51:9090")
+                .setEndpoint("http://10.132.124.20:9090")
                 .build();
         return restAdapter.create(SignalServer.class);
     }
