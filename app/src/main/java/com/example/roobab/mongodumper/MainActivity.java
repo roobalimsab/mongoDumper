@@ -138,9 +138,9 @@ public class MainActivity extends AppCompatActivity {
         List<ScanResult> aps = wifiManager.getScanResults();
         List<ScanResult> filteredAps = new ArrayList<>();
         for(ScanResult ap : aps) {
-            if(ap.SSID.equals("twguest")) {
+//            if(ap.SSID.equals("twguest")) {
                 filteredAps.add(ap);
-            }
+//            }
         }
         dumpIntoMongo(locationName, filteredAps);
         H.sendEmptyMessageDelayed(MSG_FETCH_WIFI_STRENGTH, REFRESH_DURATION);
@@ -151,10 +151,8 @@ public class MainActivity extends AppCompatActivity {
         System.out.println("ScanREsult: " + aps);
 
         SpecificSignals specificSignals = new SpecificSignals(locationName, aps);
-        TypedJsonString signalJson = new TypedJsonString(new Gson().toJson(specificSignals));
-        System.out.println("signaljson: " + signalJson);
 
-        signalServer.dumpSignals(signalJson, new Callback<Response>() {
+        signalServer.dumpSignals(specificSignals, new Callback<Response>() {
             @Override
             public void success(Response response, Response response2) {
                 System.out.println("Dump Success: " + response);

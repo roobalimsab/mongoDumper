@@ -12,7 +12,7 @@ public interface SignalServer {
     public void simpleGet();
 
     @POST("/api/signals")
-    public void dumpSignals(@Body TypedJsonString signalJson, Callback<Response> cb);
+    public void dumpSignals(@Body SpecificSignals signalJson, Callback<Response> cb);
 
     @POST("/api/collectSignals")
     public void collectLocationSignals(@Body TypedJsonString locationName, Callback<Response> cb);
