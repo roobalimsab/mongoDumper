@@ -1,5 +1,7 @@
 package com.example.roobab.mongodumper;
 
+import java.util.List;
+
 import retrofit.Callback;
 import retrofit.client.Response;
 import retrofit.http.Body;
@@ -12,7 +14,7 @@ public interface SignalServer {
     public void simpleGet();
 
     @POST("/api/signals")
-    public void dumpSignals(@Body SpecificSignals signalJson, Callback<Response> cb);
+    public void dumpSignals(@Body LocationSpecificSignals locationSpecificSignals, Callback<Response> cb);
 
     @POST("/api/collectSignals")
     public void collectLocationSignals(@Body TypedJsonString locationName, Callback<Response> cb);

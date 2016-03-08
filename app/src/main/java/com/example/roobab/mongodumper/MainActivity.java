@@ -6,14 +6,12 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
-
-import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     private void startScan() {
         WifiManager wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
         wifiManager.startScan();
+        setupWifiSignalReceivers();
     }
 
     @Override
@@ -79,12 +78,12 @@ public class MainActivity extends AppCompatActivity {
                 shouldRecord = false;
                 String locationName = locationNameView.getText().toString().trim();
                 locationNameView.setText("");
-                collectLocationSignals(locationName);
+                collectLocationSignalsIntoRespectiveFolders(locationName);
             }
         });
     }
 
-    private void collectLocationSignals(String locationName) {
+    private void collectLocationSignalsIntoRespectiveFolders(String locationName) {
         signalServer.collectLocationSignals(new TypedJsonString("{\"locationName\": \"" + locationName + "\"}"), new Callback<Response>() {
             @Override
             public void success(Response response, Response response2) {
@@ -101,15 +100,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
-        setupWifiSignalReceivers();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-
-        unregisterReceivers();
     }
 
     private BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
@@ -136,23 +131,21 @@ public class MainActivity extends AppCompatActivity {
         String locationName = locationNameView.getText().toString().trim();
         WifiManager wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
         List<ScanResult> aps = wifiManager.getScanResults();
-        List<ScanResult> filteredAps = new ArrayList<>();
+        List<ScanResult> apsOfConcern = new ArrayList<>();
         for(ScanResult ap : aps) {
 //            if(ap.SSID.equals("twguest")) {
-                filteredAps.add(ap);
+                apsOfConcern.add(ap);
 //            }
         }
-        dumpIntoMongo(locationName, filteredAps);
+        LocationSpecificSignals locationSpecificSignals = new LocationSpecificSignals(locationName, apsOfConcern);
+        dumpIntoMongo(locationSpecificSignals);
+        unregisterReceivers();
         H.sendEmptyMessageDelayed(MSG_FETCH_WIFI_STRENGTH, REFRESH_DURATION);
     }
 
-    private void dumpIntoMongo(String locationName, List<ScanResult> aps) {
-        System.out.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&in dumpintomongo");
-        System.out.println("ScanREsult: " + aps);
+    private void dumpIntoMongo(LocationSpecificSignals locationSpecificSignals) {
 
-        SpecificSignals specificSignals = new SpecificSignals(locationName, aps);
-
-        signalServer.dumpSignals(specificSignals, new Callback<Response>() {
+        signalServer.dumpSignals(locationSpecificSignals, new Callback<Response>() {
             @Override
             public void success(Response response, Response response2) {
                 System.out.println("Dump Success: " + response);
@@ -167,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
 
     private SignalServer getSignalServer() {
         RestAdapter restAdapter = new RestAdapter.Builder()
-                .setEndpoint("http://10.132.124.20:9090")
+                .setEndpoint("http://192.168.0.29:9090")
                 .build();
         return restAdapter.create(SignalServer.class);
     }
