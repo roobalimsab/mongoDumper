@@ -8,7 +8,6 @@ import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.Message;
-import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -17,9 +16,7 @@ import android.widget.TextView;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import retrofit.Callback;
 import retrofit.RestAdapter;
@@ -38,8 +35,6 @@ public class MainActivity extends AppCompatActivity {
     private TextView locationNameView;
     private SignalServer signalServer;
     private TextView stopRecordingView;
-    private int numberOfTimes;
-    private List<List<ScanResult>> apsArray;
 
     Handler H = new Handler() {
         @Override
@@ -55,7 +50,6 @@ public class MainActivity extends AppCompatActivity {
     private void startScan() {
         WifiManager wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
         wifiManager.startScan();
-        setupWifiSignalReceivers();
     }
 
     @Override
@@ -63,8 +57,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         signalServer = getSignalServer();
-        numberOfTimes = 0;
-        apsArray = new ArrayList<>();
 
         setUpViews();
         H.sendEmptyMessage(MSG_FETCH_WIFI_STRENGTH);
@@ -88,7 +80,6 @@ public class MainActivity extends AppCompatActivity {
                 String locationName = locationNameView.getText().toString().trim();
                 locationNameView.setText("");
                 collectLocationSignals(locationName);
-                unregisterReceivers();
             }
         });
     }
@@ -110,11 +101,15 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        setupWifiSignalReceivers();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+
+        unregisterReceivers();
     }
 
     private BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
@@ -138,7 +133,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void readSignalStrength() {
-        numberOfTimes++;
         String locationName = locationNameView.getText().toString().trim();
         WifiManager wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
         List<ScanResult> aps = wifiManager.getScanResults();
@@ -148,46 +142,8 @@ public class MainActivity extends AppCompatActivity {
                 filteredAps.add(ap);
 //            }
         }
-
-        if(shouldRecord) {
-            if(numberOfTimes < 10) {
-                apsArray.add(filteredAps);
-                H.sendEmptyMessage(MSG_FETCH_WIFI_STRENGTH);
-                return;
-            }
-
-            List<ScanResult> finalAps = getScanResultsWithMeanLevel(filteredAps);
-
-            dumpIntoMongo(locationName, finalAps);
-            H.sendEmptyMessageDelayed(MSG_FETCH_WIFI_STRENGTH, REFRESH_DURATION);
-        } else {
-            return;
-        }
-    }
-
-    @Nullable
-    private List<ScanResult> getScanResultsWithMeanLevel(List<ScanResult> filteredAps) {
-        Map<String, Integer> macLevelMap = new HashMap<>();
-        Map<String, Integer> macFreqMap = new HashMap<>();
-
-        for(List<ScanResult> ap : apsArray) {
-            for(ScanResult mac : ap) {
-                Integer level = macLevelMap.get(mac.BSSID) != null ? macLevelMap.get(mac.BSSID) : 0;
-                Integer freq = macFreqMap.get(mac.BSSID) != null ? macFreqMap.get(mac.BSSID) : 0;
-                level += mac.level;
-                freq += mac.frequency;
-                macLevelMap.put(mac.BSSID, level);
-                macFreqMap.put(mac.BSSID, freq);
-            }
-        }
-        List<ScanResult> finalAps = apsArray.get(0);
-        for(ScanResult finalAp : finalAps) {
-            finalAp.level = macLevelMap.get(finalAp.BSSID)/10;
-            finalAp.frequency = macFreqMap.get(finalAp.BSSID)/10;
-        }
-        numberOfTimes = 0;
-        apsArray.clear();
-        return finalAps;
+        dumpIntoMongo(locationName, filteredAps);
+        H.sendEmptyMessageDelayed(MSG_FETCH_WIFI_STRENGTH, REFRESH_DURATION);
     }
 
     private void dumpIntoMongo(String locationName, List<ScanResult> aps) {
@@ -211,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
 
     private SignalServer getSignalServer() {
         RestAdapter restAdapter = new RestAdapter.Builder()
-                .setEndpoint("http://10.132.124.180:9090")
+                .setEndpoint("http://10.132.124.20:9090")
                 .build();
         return restAdapter.create(SignalServer.class);
     }
