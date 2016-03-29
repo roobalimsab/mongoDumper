@@ -134,11 +134,12 @@ public class MainActivity extends AppCompatActivity {
         List<ScanResult> apsOfConcern = new ArrayList<>();
         for(ScanResult ap : aps) {
 //            if(ap.SSID.equals("twguest")) {
-                apsOfConcern.add(ap);
+            apsOfConcern.add(ap);
 //            }
+
+            LocationSpecificSignals locationSpecificSignals = new LocationSpecificSignals(locationName, ap.BSSID, ap.level);
+            dumpIntoMongo(locationSpecificSignals);
         }
-        LocationSpecificSignals locationSpecificSignals = new LocationSpecificSignals(locationName, apsOfConcern);
-        dumpIntoMongo(locationSpecificSignals);
         unregisterReceivers();
         H.sendEmptyMessageDelayed(MSG_FETCH_WIFI_STRENGTH, REFRESH_DURATION);
     }
@@ -160,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
 
     private SignalServer getSignalServer() {
         RestAdapter restAdapter = new RestAdapter.Builder()
-                .setEndpoint("http://192.168.0.29:9090")
+                .setEndpoint("http://192.168.0.38:9090")
                 .build();
         return restAdapter.create(SignalServer.class);
     }
